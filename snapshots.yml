@@ -1,0 +1,33 @@
+version: 2
+
+snapshots:
+  - name: cust_email_snapshot
+    description: >
+      SCD Type 2 snapshot for customer emails.
+      Tracks historical changes and maintains one current record per email.
+
+    columns:
+      - name: customer_id
+        description: Unique identifier for the customer
+
+      - name: email
+        description: Natural key used for SCD2 tracking
+        tests:
+          - not_null
+
+      - name: first_name
+        description: Customer first name
+
+      - name: last_name
+        description: Customer last name
+
+      - name: city
+        description: Customer's city of residence
+
+      - name: dbt_valid_from
+        description: Timestamp when this version became active
+        tests:
+          - not_null
+
+      - name: dbt_valid_to
+        description: Timestamp when this version expired (NULL = current record)
