@@ -1,0 +1,3 @@
+customer_id,email,first_name,last_name,city,source_system
+7,alice@test.com,Alice,J.,Bristol,instagram
+8,alice@test.com,Alicia,Johnson,Bristol,facebook

@@ -1,0 +1,12 @@
+customer_id,email,first_name,last_name,city
+1,alice@test.com,Alice,Johnson,Bristol
+2,bob@test.com,Bob,Brown,Manchester
+3,stacy@test.com,Stacy,Styles,Edinburgh
+4,silvia@test.com,Silvia,Dsouza,Nottingham
+5,glenn@test.com,Glenn,Mathews,London
+6,alvin@test.com,Alvin,George,Plymouth
+7,alice@test.com,Alice,Smith,Bristol
+8,sim@test.com,Sim,Kaur,Glasgow
+9,bob@test.com,Bob,Green,Manchester
+10,jane@test.com,Jane,Doe,Liverpool
+11,glenn@test.com,Glenn,Mathews,Bristol
