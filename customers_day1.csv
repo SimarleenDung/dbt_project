@@ -1,0 +1,4 @@
+customer_id,email,first_name,last_name,city,source_system
+1,alice@test.com,Alice,Johnson,Bristol,facebook
+2,bob@test.com,Bob,Brown,Manchester,facebook
+3,stacy@test.com,Stacy,Styles,Edinburgh,instagram

@@ -1,0 +1,2 @@
+customer_id,email,first_name,last_name,city,phone_number,source_system
+9,bob@test.com,Bob,Green,Manchester,9876543210,facebook

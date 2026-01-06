@@ -1,0 +1,81 @@
+customer_id,first_name,middle_name,last_name,city,updated_at
+C001,John,,Doe,,2024-01-01 10:00:00
+C001,,A.,Doe,New York,2024-01-02 11:00:00
+C001,John,A.,,New York,2024-01-03 09:00:00
+C001,,,Doe,,2024-01-04 08:00:00
+C002,Emily,,Ross,Chicago,2024-01-01 12:00:00
+C002,Emily,B.,,Chicago,2024-01-02 14:00:00
+C002,,B.,Ross,,2024-01-03 15:00:00
+C003,Michael,,Stone,,2024-01-01 16:00:00
+C003,,K.,Stone,Seattle,2024-01-02 17:00:00
+C003,Michael,K.,,Seattle,2024-01-03 11:00:00
+C003,,,Stone,,2024-01-04 07:00:00
+C004,Sarah,,Lee,Denver,2024-01-01 09:00:00
+C004,,M.,Lee,,2024-01-02 12:30:00
+C004,Sarah,M.,,,2024-01-03 13:45:00
+C004,,,Lee,Denver,2024-01-04 14:20:00
+C005,Chris,,Brown,,2024-01-01 13:00:00
+C005,,L.,Brown,Houston,2024-01-02 13:30:00
+C005,Chris,L.,,Houston,2024-01-03 14:10:00
+C005,,,Brown,,2024-01-04 15:00:00
+C006,Linda,,White,,2024-01-01 10:20:00
+C006,,M.,White,Miami,2024-01-02 11:10:00
+C006,Linda,M.,,Miami,2024-01-03 12:40:00
+C006,,,White,,2024-01-04 16:50:00
+C007,Robert,,King,Dallas,2024-01-01 08:20:00
+C007,,J.,King,,2024-01-02 09:45:00
+C007,Robert,J.,,Dallas,2024-01-03 10:55:00
+C008,Karen,,Fox,,2024-01-01 17:00:00
+C008,,L.,Fox,San Jose,2024-01-02 18:10:00
+C008,Karen,L.,,San Jose,2024-01-03 19:20:00
+C009,David,,Cole,,2024-01-01 14:00:00
+C009,,R.,Cole,Phoenix,2024-01-02 15:00:00
+C009,David,R.,,Phoenix,2024-01-03 16:00:00
+C010,Olivia,,Stone,,2024-01-01 13:15:00
+C010,,A.,Stone,Seattle,2024-01-02 14:05:00
+C010,Olivia,A.,,Seattle,2024-01-03 15:45:00
+C011,Daniel,,Young,,2024-01-01 12:20:00
+C011,,B.,Young,Chicago,2024-01-02 13:25:00
+C011,Daniel,B.,,Chicago,2024-01-03 14:35:00
+C012,Sophia,,Adams,,2024-01-01 10:00:00
+C012,,C.,Adams,New York,2024-01-02 11:00:00
+C012,Sophia,C.,,New York,2024-01-03 12:00:00
+C013,Ethan,,Parker,,2024-01-01 11:45:00
+C013,,J.,Parker,Denver,2024-01-02 13:10:00
+C013,Ethan,J.,,Denver,2024-01-03 14:25:00
+C014,Mia,,Green,,2024-01-01 15:00:00
+C014,,L.,Green,Boston,2024-01-02 16:00:00
+C014,Mia,L.,,Boston,2024-01-03 17:00:00
+C015,Noah,,Hill,,2024-01-01 09:10:00
+C015,,B.,Hill,Atlanta,2024-01-02 10:30:00
+C015,Noah,B.,,Atlanta,2024-01-03 11:40:00
+C016,Ava,,Ward,,2024-01-01 12:30:00
+C016,,C.,Ward,Seattle,2024-01-02 13:30:00
+C016,Ava,C.,,Seattle,2024-01-03 14:30:00
+C017,James,,Cruz,,2024-01-01 08:45:00
+C017,,A.,Cruz,Houston,2024-01-02 09:50:00
+C017,James,A.,,Houston,2024-01-03 10:55:00
+C018,Lily,,Baker,,2024-01-01 11:00:00
+C018,,M.,Baker,Miami,2024-01-02 12:00:00
+C018,Lily,M.,,Miami,2024-01-03 13:00:00
+C019,Henry,,Price,,2024-01-01 16:00:00
+C019,,L.,Price,Chicago,2024-01-02 17:00:00
+C019,Henry,L.,,Chicago,2024-01-03 18:00:00
+C020,Grace,,Mills,,2024-01-01 14:30:00
+C020,,R.,Mills,Boston,2024-01-02 15:20:00
+C020,Grace,R.,,Boston,2024-01-03 16:10:00
+C021,Owen,,Shaw,,2024-01-01 12:15:00
+C021,,K.,Shaw,Denver,2024-01-02 13:25:00
+C021,Owen,K.,,Denver,2024-01-03 14:40:00
+C022,Chloe,,Reed,,2024-01-01 08:30:00
+C022,,S.,Reed,Seattle,2024-01-02 09:35:00
+C022,Chloe,S.,,Seattle,2024-01-03 10:50:00
+C023,Jack,,Bell,,2024-01-01 13:00:00
+C023,,A.,Bell,Phoenix,2024-01-02 14:10:00
+C023,Jack,A.,,Phoenix,2024-01-03 15:25:00
+C024,Nora,,Diaz,,2024-01-01 16:45:00
+C024,,J.,Diaz,Houston,2024-01-02 17:50:00
+C024,Nora,J.,,Houston,2024-01-03 18:55:00
+C025,Leo,,Hunter,,2024-01-01 11:20:00
+C025,,B.,Hunter,Chicago,2024-01-02 12:35:00
+C025,Leo,B.,,Chicago,2024-01-03 13:45:00

@@ -1,0 +1,8 @@
+email,first_name,middle_name,last_name,updated_at
+a@test.com,John,,Doe,2024-01-01 10:00:00
+a@test.com,,Michael,,2024-01-02 11:00:00
+b@test.com,Sophie,,,2024-01-01 09:00:00
+b@test.com,,,Smith,2024-01-01 09:00:00
+b@test.com,,William,Smith,2024-01-01 09:00:00
+c@test.com,,,Brown,2024-01-03 08:00:00
+c@test.com,Chris,,,2024-01-04 07:00:00

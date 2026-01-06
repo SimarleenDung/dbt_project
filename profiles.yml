@@ -1,0 +1,17 @@
+Sim_Learning:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: SB73656
+
+      user: SIMARLEENAIRFLOWACC
+      password: Simu@Snowflake28
+
+      role: ACCOUNTADMIN
+      database: AIRFLOW_DB
+      warehouse: COMPUTE_WH
+      schema: STAGE
+
+      threads: 4
+      client_session_keep_alive: false

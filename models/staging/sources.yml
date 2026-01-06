@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: staging_source
+    database: AIRFLOW_DB          # or your DB
+    schema: STAGING               # your staging schema
+    tables:
+      - name: dbt_uc_one_customer_data       # your cloned table name
