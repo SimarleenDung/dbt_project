@@ -79,3 +79,17 @@ select
     'day6' as batch_id,
     current_timestamp as ingestion_ts
 from {{ ref('customers_day6') }}
+
+union all
+
+select
+    customer_id,
+    email,
+    first_name,
+    last_name,
+    city,
+    phone_number,
+    source_system,
+    'day7' as batch_id,
+    current_timestamp as ingestion_ts
+from {{ ref('customers_day7') }}
