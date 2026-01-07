@@ -5,6 +5,7 @@ select
     last_name,
     city,
     phone_number,
+    source_system,
 
     dbt_valid_from as start_ts,
     dbt_valid_to   as end_ts,
