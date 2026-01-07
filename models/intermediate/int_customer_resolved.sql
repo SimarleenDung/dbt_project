@@ -12,6 +12,7 @@ with ranked as (
         last_name,
         city,
         phone_number,
+        source_system,
         ingestion_ts,
         row_number() over (
             partition by email
@@ -34,6 +35,7 @@ select
     last_name,
     city,
     phone_number,
+    source_system,
     ingestion_ts as resolved_ts
 from ranked
 where rn = 1
