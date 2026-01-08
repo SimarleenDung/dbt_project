@@ -7,7 +7,7 @@ select
     cast(null as varchar) as phone_number,
     source_system,
     'day1' as batch_id,
-    current_timestamp as ingestion_ts
+    '2025-01-01'::timestamp as ingestion_ts
 from {{ ref('customers_day1') }}
 
 union all
@@ -21,7 +21,7 @@ select
     cast(null as varchar) as phone_number,
     source_system,
     'day2' as batch_id,
-    current_timestamp as ingestion_ts
+    '2025-01-02'::timestamp as ingestion_ts
 from {{ ref('customers_day2') }}
 
 union all
@@ -35,10 +35,10 @@ select
     cast(null as varchar) as phone_number,
     source_system,
     'day3' as batch_id,
-    current_timestamp as ingestion_ts
+    '2025-01-03'::timestamp as ingestion_ts
 from {{ ref('customers_day3') }}
 
-union all
+/*union all
 
 select
     customer_id,
@@ -49,7 +49,7 @@ select
     phone_number,
     source_system,
     'day4' as batch_id,
-    current_timestamp as ingestion_ts
+    '2025-01-04'::timestamp as ingestion_ts
 from {{ ref('customers_day4') }}
 
 union all
@@ -63,7 +63,7 @@ select
     cast(null as varchar) as phone_number,
     source_system,
     'day5' as batch_id,
-    current_timestamp as ingestion_ts
+    '2025-01-05'::timestamp as ingestion_ts
 from {{ ref('customers_day5') }}
 
 union all
@@ -77,7 +77,7 @@ select
     phone_number,
     source_system,
     'day6' as batch_id,
-    current_timestamp as ingestion_ts
+    '2025-01-06'::timestamp as ingestion_ts
 from {{ ref('customers_day6') }}
 
 union all
@@ -91,5 +91,5 @@ select
     phone_number,
     source_system,
     'day7' as batch_id,
-    current_timestamp as ingestion_ts
-from {{ ref('customers_day7') }}
+    '2025-01-07'::timestamp as ingestion_ts
+from {{ ref('customers_day7') }}*/
