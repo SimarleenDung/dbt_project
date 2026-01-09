@@ -16,3 +16,4 @@ select
     end as is_current
 
 from {{ ref('cust_email_snapshot') }}
+where dbt_valid_to is null
