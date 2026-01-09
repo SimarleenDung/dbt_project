@@ -16,7 +16,7 @@ with ranked as (
         ingestion_ts,
         row_number() over (
             partition by email
-            order by ingestion_ts desc
+            order by ingestion_ts desc, customer_id desc
         ) as rn
     from {{ ref('stg_customers') }}
 

@@ -22,6 +22,6 @@ select
     city,
     phone_number,
     source_system
-from {{ ref('int_customer_resolved') }}
+from {{ ref('stg_customers')}}
 
 {% endsnapshot %}
