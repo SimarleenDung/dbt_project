@@ -10,7 +10,8 @@
             'last_name',
             'city',
             'phone_number',
-            'source_system'
+            'source_system',
+            'batch_id'
         ]
     )
 }}
@@ -21,7 +22,8 @@ select
     last_name,
     city,
     phone_number,
-    source_system
-from {{ ref('stg_customers')}}
+    source_system,
+    batch_id
+from {{ ref('int_customer_resolved')}}
 
 {% endsnapshot %}
