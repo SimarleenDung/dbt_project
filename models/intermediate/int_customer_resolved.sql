@@ -13,19 +13,13 @@ with ranked as (
         city,
         phone_number,
         source_system,
+        batch_id,
         ingestion_ts,
         row_number() over (
             partition by email
             order by ingestion_ts desc, customer_id desc
         ) as rn
     from {{ ref('stg_customers') }}
-
-    {% if is_incremental() %}
-      where ingestion_ts > (
-        select coalesce(max(resolved_ts), '1900-01-01')
-        from {{ this }}
-      )
-    {% endif %}
 
 )
 
@@ -36,6 +30,7 @@ select
     city,
     phone_number,
     source_system,
+    batch_id,
     ingestion_ts as resolved_ts
 from ranked
 where rn = 1

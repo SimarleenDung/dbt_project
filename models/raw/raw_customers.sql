@@ -93,3 +93,31 @@ select
     'day7' as batch_id,
     '2025-01-07'::timestamp as ingestion_ts
 from {{ ref('customers_day7') }}
+
+union all
+
+select
+    customer_id,
+    email,
+    first_name,
+    last_name,
+    city,
+    phone_number,
+    source_system,
+    'day8' as batch_id,
+    '2025-01-08'::timestamp as ingestion_ts
+from {{ ref('customers_day8') }}
+
+union all
+
+select
+    customer_id,
+    email,
+    first_name,
+    last_name,
+    city,
+    phone_number,
+    source_system,
+    'day9' as batch_id,
+    '2025-01-09'::timestamp as ingestion_ts
+from {{ ref('customers_day9') }}
