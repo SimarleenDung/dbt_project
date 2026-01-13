@@ -1,4 +1,34 @@
+-- testing the test_customers file
 select 
+    --customer_id,
+    email,
+    first_name,
+    last_name,
+    city,
+    phone_number,
+    source_system,
+    'test_customers' as batch_id,
+    --'day1' as batch_id,
+    --'2025-01-01'::timestamp as ingestion_ts
+    ingestion_ts
+from {{ ref('test_customers') }}
+
+/*-- Running the test file with 9k rows
+select 
+    --customer_id,
+    email,
+    first_name,
+    last_name,
+    city,
+    phone_number,
+    source_system,
+    'test1' as batch_id,
+    --'day1' as batch_id,
+    --'2025-01-01'::timestamp as ingestion_ts
+    timestamp::timestamp as ingestion_ts
+from {{ ref('customers_seed') }}*/
+
+/*select 
     customer_id,
     email,
     first_name,
@@ -134,4 +164,4 @@ select
     source_system,
     'day10' as batch_id,
     '2025-01-10'::timestamp as ingestion_ts
-from {{ ref('customers_day10') }}
+from {{ ref('customers_day10') }}*/
