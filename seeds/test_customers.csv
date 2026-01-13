@@ -1,0 +1,2 @@
+email,first_name,last_name,city,phone_number,source_system,ingestion_ts
+xyz@example.com,John,Doe,NYC,555-1234,CRM,2026-01-15

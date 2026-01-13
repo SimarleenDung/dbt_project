@@ -51,7 +51,7 @@ combined as (
             phone_number,
             source_system,
             ingestion_ts as valid_from
-        from source_data
+        from source_data where email not in (select distinct email from {{this}})
 
     {% else %}
 
