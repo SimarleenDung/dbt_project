@@ -1,4 +1,4 @@
--- testing the test_customers file
+/*-- testing the test_customers file
 select 
     --customer_id,
     email,
@@ -10,12 +10,29 @@ select
     'test_customers' as batch_id,
     --'day1' as batch_id,
     --'2025-01-01'::timestamp as ingestion_ts
-    ingestion_ts
-from {{ ref('test_customers') }}
+    timestamp::timestamp as ingestion_ts
+from {{ ref('test_customers') }}*/
 
-/*-- Running the test file with 9k rows
+/*union all
+
+-- testing the test_customers2 file
 select 
     --customer_id,
+    email,
+    first_name,
+    last_name,
+    city,
+    cast(null as varchar) as phone_number,
+    source_system,
+    'test_customers2' as batch_id,
+    --'day1' as batch_id,
+    --'2025-01-01'::timestamp as ingestion_ts
+    timestamp::timestamp as ingestion_ts
+from {{ ref('test_customers2') }}*/
+
+-- Running the test file with 9k rows
+select 
+    customer_id,
     email,
     first_name,
     last_name,
@@ -26,7 +43,7 @@ select
     --'day1' as batch_id,
     --'2025-01-01'::timestamp as ingestion_ts
     timestamp::timestamp as ingestion_ts
-from {{ ref('customers_seed') }}*/
+from {{ ref('customers_seed') }}
 
 /*select 
     customer_id,

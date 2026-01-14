@@ -1,2 +1,3 @@
-email,first_name,last_name,city,phone_number,source_system,ingestion_ts
-xyz@example.com,John,Doe,NYC,555-1234,CRM,2026-01-15
+email,first_name,last_name,city,phone_number,source_system
+xyz@example.com,Henry,Doe,Boston,555-1234,CRM
+abc@example.com,Dave,Cliff,Boston,111-2222,Instagram
