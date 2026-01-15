@@ -30,7 +30,7 @@ select
     timestamp::timestamp as ingestion_ts
 from {{ ref('test_customers2') }}*/
 
--- Running the test file with 9k rows
+-- Running the test file with 10k rows
 select 
     customer_id,
     email,
@@ -39,11 +39,27 @@ select
     city,
     phone_number,
     source_system,
-    'customers_seed_new' as batch_id,
+    'day_1' as batch_id,
     --'day1' as batch_id,
     --'2025-01-01'::timestamp as ingestion_ts
     timestamp::timestamp as ingestion_ts
-from {{ ref('customers_seed_new') }}
+from {{ ref('customers_day_1') }}
+
+union all
+
+select 
+    customer_id,
+    email,
+    first_name,
+    last_name,
+    city,
+    phone_number,
+    source_system,
+    'day_2' as batch_id,
+    --'day1' as batch_id,
+    --'2025-01-01'::timestamp as ingestion_ts
+    timestamp::timestamp as ingestion_ts
+from {{ ref('customers_day_2') }}
 
 /*select 
     customer_id,
