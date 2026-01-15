@@ -1,163 +1,162 @@
-import pandas as pd
-from datetime import datetime, timedelta
+import csv
 import random
-import string
+from datetime import datetime, timedelta
 
-random.seed(42)
+UNIQUE_EMAILS = 2000  # Will generate ~10k rows across versions
+TOTAL_TARGET_ROWS = 10000
 
-# Sample data pools for variety
-first_names = ["Alice", "Bob", "Charlie", "David", "Emma", "Frank", "Grace", "Henry", "Ivy", "Jack",
-               "Karen", "Liam", "Mary", "Nathan", "Olivia", "Peter", "Quinn", "Rachel", "Sam", "Tina"]
+first_names = ["Alice", "Alicia", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Henry", "Ivy"]
+last_names = ["Smith", "Johnson", "Brown", "Taylor", "Williams", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"]
+cities = ["London", "Bristol", "Manchester", "Leeds", "Birmingham", "Liverpool", "Newcastle", None]
+sources = ["instagram", "facebook", "google", "linkedin"]
+phone_numbers = ["0712345678", "0798765432", "0788888888", "0755555555", None]
 
-last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez",
-              "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin"]
-
-cities = ["NYC", "LA", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose",
-          "Austin", "Jacksonville", "Portland", "Seattle", "Denver", "Boston", "Miami", "Atlanta", "Nashville", "Detroit"]
-
-sources = ["web", "mobile", "api", "partner"]
-
-def generate_email(first_name, last_name, customer_id):
-    """Generate a unique email"""
-    return f"{first_name.lower()}.{last_name.lower()}{customer_id}@example.com"
-
-def generate_phone():
-    """Generate a random phone number"""
-    return f"555{random.randint(1000000, 9999999)}"
-
-def generate_base_customers(num_customers=10000):
-    """Generate base customer dataset"""
-    customers = []
-    
-    for i in range(num_customers):
-        first_name = random.choice(first_names)
-        last_name = random.choice(last_names)
-        
-        customers.append({
-            "customer_id": i + 1,
-            "email": generate_email(first_name, last_name, i + 1),
-            "first_name": first_name,
-            "last_name": last_name,
-            "city": random.choice(cities),
-            "phone": generate_phone(),
-            "source_system": random.choice(sources)
-        })
-    
-    return customers
-
-def generate_daily_file(base_customers, day_offset, change_percentage=0.2, duplicate_percentage=0.05, output_path=None):
+def generate_daily_file(filename, day_offset, emails_list):
     """
-    Generate a CSV file for a specific day with optional changes.
+    Generate a daily CSV file.
     
-    day_offset: 0 for day 1, 1 for day 2, etc.
-    change_percentage: % of customers that should have changes (default 20%)
-    duplicate_percentage: % of customers with duplicate records same day (default 5%)
-    output_path: where to save the CSV
+    On day 1: Each email appears 1 time (initial load)
+    On day 2+: Some emails appear again with changes, others stay same
     """
     
     base_date = datetime(2025, 1, 1) + timedelta(days=day_offset)
-    
     rows = []
-    num_to_change = int(len(base_customers) * change_percentage)
-    num_to_duplicate = int(len(base_customers) * duplicate_percentage)
     
-    customers_to_change = random.sample(range(len(base_customers)), num_to_change)
-    customers_to_duplicate = random.sample(range(len(base_customers)), num_to_duplicate)
-    
-    for idx, customer in enumerate(base_customers):
-        row = customer.copy()
-        
-        # Generate random time for this record (spread throughout the day)
-        random_hour = random.randint(0, 23)
-        random_minute = random.randint(0, 59)
-        random_second = random.randint(0, 59)
-        timestamp = base_date.replace(hour=random_hour, minute=random_minute, second=random_second)
-        timestamp_str = timestamp.strftime('%Y-%m-%d %H:%M:%S')
-        
-        # Apply random changes to selected customers
-        if idx in customers_to_change:
-            change_type = random.choice(['name', 'city', 'phone', 'multiple'])
+    if day_offset == 0:
+        # DAY 1: Initial load - each email appears once
+        for customer_id, email in enumerate(emails_list, start=1):
+            first_name = random.choice(first_names)
+            last_name = random.choice(last_names)
+            city = random.choice(cities)
+            phone = random.choice(phone_numbers)
+            source = random.choice(sources)
             
-            if change_type == 'name':
-                row["first_name"] = random.choice(first_names)
-            elif change_type == 'city':
-                row["city"] = random.choice(cities)
-            elif change_type == 'phone':
-                row["phone"] = generate_phone()
-            else:  # multiple changes
-                if random.random() > 0.5:
-                    row["first_name"] = random.choice(first_names)
-                if random.random() > 0.5:
-                    row["city"] = random.choice(cities)
-                if random.random() > 0.5:
-                    row["phone"] = generate_phone()
-        
-        row["timestamp"] = timestamp_str
-        rows.append(row)
-        
-        # Add duplicate record for selected customers (with different values)
-        if idx in customers_to_duplicate:
-            dup_row = row.copy()
-            dup_row["first_name"] = random.choice(first_names)  # Change first_name in duplicate
-            # Give duplicate a slightly later timestamp on same day
-            dup_timestamp = base_date.replace(hour=random.randint(0, 23), minute=random.randint(0, 59), second=random.randint(0, 59))
-            dup_row["timestamp"] = dup_timestamp.strftime('%Y-%m-%d %H:%M:%S')
-            rows.append(dup_row)
+            # Random time on day 1
+            random_hour = random.randint(0, 23)
+            random_minute = random.randint(0, 59)
+            random_second = random.randint(0, 59)
+            timestamp = base_date.replace(hour=random_hour, minute=random_minute, second=random_second)
+            
+            rows.append([
+                customer_id,
+                email,
+                first_name,
+                last_name,
+                city,
+                phone,
+                source,
+                timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            ])
+    else:
+        # DAY 2+: Load all customers again, but ~20% will have changes
+        for customer_id, email in enumerate(emails_list, start=1):
+            # Load the previous version from the same customer
+            first_name = random.choice(first_names)
+            last_name = random.choice(last_names)
+            city = random.choice(cities)
+            phone = random.choice(phone_numbers)
+            source = random.choice(sources)
+            
+            # Decide if this email changes on this day (20% chance)
+            if random.random() < 0.20:
+                # Apply a change
+                change_type = random.choice(['name', 'city', 'phone', 'source', 'multiple'])
+                
+                if change_type == 'name':
+                    first_name = random.choice(first_names)
+                elif change_type == 'city':
+                    city = random.choice(cities)
+                elif change_type == 'phone':
+                    phone = random.choice(phone_numbers)
+                elif change_type == 'source':
+                    source = random.choice(sources)
+                else:  # multiple
+                    if random.random() < 0.5:
+                        first_name = random.choice(first_names)
+                    if random.random() < 0.5:
+                        city = random.choice(cities)
+                    if random.random() < 0.5:
+                        phone = random.choice(phone_numbers)
+            
+            # Random time on this day
+            random_hour = random.randint(0, 23)
+            random_minute = random.randint(0, 59)
+            random_second = random.randint(0, 59)
+            timestamp = base_date.replace(hour=random_hour, minute=random_minute, second=random_second)
+            
+            rows.append([
+                customer_id,
+                email,
+                first_name,
+                last_name,
+                city,
+                phone,
+                source,
+                timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            ])
+            
+            # ~5% chance of duplicate on same day
+            if random.random() < 0.05:
+                dup_hour = random.randint(0, 23)
+                dup_minute = random.randint(0, 59)
+                dup_second = random.randint(0, 59)
+                dup_timestamp = base_date.replace(hour=dup_hour, minute=dup_minute, second=dup_second)
+                
+                rows.append([
+                    customer_id,
+                    email,
+                    first_name,
+                    last_name,
+                    city,
+                    phone,
+                    source,
+                    dup_timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                ])
     
-    df = pd.DataFrame(rows)
+    # Write to CSV
+    with open(filename, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "customer_id",
+            "email",
+            "first_name",
+            "last_name",
+            "city",
+            "phone_number",
+            "source_system",
+            "timestamp"
+        ])
+        writer.writerows(rows)
     
-    if output_path is None:
-        output_path = f"customers_day_{day_offset + 1}.csv"
-    
-    df.to_csv(output_path, index=False)
-    print(f"Generated: {output_path} ({len(df)} rows)")
-    return df
+    print(f"✅ Generated {filename} with {len(rows)} rows")
+    return rows
 
 # ===== GENERATE TEST DATA =====
 
-print("Generating base customer data (10,000 rows)...")
-base_customers = generate_base_customers(num_customers=10000)
+print("Generating test data with consistent emails across days...\n")
 
-print("\n" + "="*60)
-print("Generating daily files...")
-print("="*60 + "\n")
+# Create list of unique emails (same across all days)
+emails_list = [f"user{i}@test.com" for i in range(1, UNIQUE_EMAILS + 1)]
 
-# DAY 1: Initial load
-generate_daily_file(
-    base_customers,
-    day_offset=0,
-    change_percentage=0.0,  # No changes on day 1
-    duplicate_percentage=0.0,  # No duplicates on day 1
-    output_path="customers_day_1.csv"
-)
+# Generate day 1
+generate_daily_file("customers_day_1.csv", day_offset=0, emails_list=emails_list)
 
-# DAY 2: 20% of customers changed, 5% have duplicates
-generate_daily_file(
-    base_customers,
-    day_offset=1,
-    change_percentage=0.2,
-    duplicate_percentage=0.05,
-    output_path="customers_day_2.csv"
-)
+# Generate day 2 (same emails, ~20% with changes)
+generate_daily_file("customers_day_2.csv", day_offset=1, emails_list=emails_list)
 
-# DAY 3: 15% of customers changed, 3% have duplicates
-generate_daily_file(
-    base_customers,
-    day_offset=2,
-    change_percentage=0.15,
-    duplicate_percentage=0.03,
-    output_path="customers_day_3.csv"
-)
+# Generate day 3 (same emails, ~20% with changes)
+generate_daily_file("customers_day_3.csv", day_offset=2, emails_list=emails_list)
 
 print("\n" + "="*60)
 print("Test files generated successfully!")
 print("="*60)
 print("\nExpected SCD2 behavior:")
-print("- Day 1: 10,000 current records (is_current = 'Y')")
-print("- Day 2: ~2,000 records closed (is_current = 'N'), 2,000 new versions added (is_current = 'Y')")
-print("        Plus ~500 duplicates that get deduplicated")
-print("- Day 3: ~1,500 records closed (is_current = 'N'), 1,500 new versions added (is_current = 'Y')")
-print("        Plus ~300 duplicates that get deduplicated")
-print("\nTotal expected rows in final SCD2 table:")
-print("- 10,000 (original) + 2,000 (day 2 old) + 1,500 (day 3 old) = 13,500 rows")
+print("- Day 1: 2,000 unique emails × ~1 version = 2,000 rows, all is_current='Y'")
+print("- Day 2: 2,000 emails reloaded, ~400 (20%) have changes")
+print("        → Old versions of 400 closed (is_current='N')")
+print("        → New versions of 400 added (is_current='Y')")
+print("        → 1,600 unchanged records still marked 'Y'")
+print("- Day 3: 2,000 emails reloaded, ~400 (20%) have changes")
+print("        → Same pattern repeats")
+print("\nTotal expected rows in final SCD2 table: ~2,800")
 print("="*60)
