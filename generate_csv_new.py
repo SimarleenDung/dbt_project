@@ -139,13 +139,13 @@ print("Generating test data with consistent emails across days...\n")
 emails_list = [f"user{i}@test.com" for i in range(1, UNIQUE_EMAILS + 1)]
 
 # Generate day 1
-generate_daily_file("customers_day_1.csv", day_offset=0, emails_list=emails_list)
+generate_daily_file("testday_1_2k.csv", day_offset=0, emails_list=emails_list)
 
 # Generate day 2 (same emails, ~20% with changes)
-generate_daily_file("customers_day_2.csv", day_offset=1, emails_list=emails_list)
+generate_daily_file("testday_2_2k.csv", day_offset=1, emails_list=emails_list)
 
 # Generate day 3 (same emails, ~20% with changes)
-generate_daily_file("customers_day_3.csv", day_offset=2, emails_list=emails_list)
+generate_daily_file("testday_3_2k.csv", day_offset=2, emails_list=emails_list)
 
 print("\n" + "="*60)
 print("Test files generated successfully!")
