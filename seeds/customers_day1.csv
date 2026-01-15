@@ -1,4 +1,4 @@
-customer_id,email,first_name,last_name,city,source_system
-1,alice@test.com,Alice,Johnson,Bristol,facebook
-2,bob@test.com,Bob,Brown,Manchester,facebook
-3,stacy@test.com,Stacy,Styles,Edinburgh,instagram
+customer_id,email,first_name,last_name,city,source_system,ingestion_ts
+1,alice@test.com,Alice,Johnson,Bristol,facebook,2025-01-01 08:15:23
+2,bob@test.com,Bob,Brown,Manchester,facebook,2025-01-01 09:42:17
+3,stacy@test.com,Stacy,Styles,Edinburgh,instagram,2025-01-01 14:33:55

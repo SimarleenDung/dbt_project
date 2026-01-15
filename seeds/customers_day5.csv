@@ -1,2 +1,2 @@
-customer_id,email,first_name,last_name,source_system
-10,jane@test.com,Jane,Doe,instagram
+customer_id,email,first_name,last_name,source_system,ingestion_ts
+10,jane@test.com,Jane,Doe,instagram,2025-01-05 14:38:52
