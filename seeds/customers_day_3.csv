@@ -1,4 +1,4 @@
-customer_id,email,first_name,last_name,city,phone,source_system,timestamp
+customer_id,email,first_name,last_name,city,phone_number,source_system,timestamp
 1,david.smith1@example.com,David,Smith,Dallas,5555108603,mobile,2025-01-03 17:48:51
 1,david.smith1@example.com,Olivia,Smith,Dallas,5555108603,mobile,2025-01-03 07:02:59
 2,emma.brown2@example.com,Emma,Brown,Atlanta,5552458591,partner,2025-01-03 23:36:02
