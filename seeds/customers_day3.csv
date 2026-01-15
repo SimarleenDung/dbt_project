@@ -1,3 +1,3 @@
-customer_id,email,first_name,last_name,city,source_system
-7,alice@test.com,Alice,J.,Bristol,instagram
-8,alice@test.com,Alicia,Johnson,Bristol,facebook
+customer_id,email,first_name,last_name,city,source_system,ingestion_ts
+7,alice@test.com,Alice,J.,Bristol,instagram,2025-01-03 09:14:28
+8,alice@test.com,Alicia,Johnson,Bristol,facebook,2025-01-03 13:56:41

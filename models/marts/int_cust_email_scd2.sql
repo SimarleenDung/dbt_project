@@ -1,6 +1,7 @@
+-- SCD2 HISTORY TABLE (keeps all versions)
 {{ config(
     materialized = 'incremental',
-    unique_key = 'email',
+    unique_key = ['email', 'valid_from'],
     incremental_strategy = 'merge'
 ) }}
 
@@ -13,11 +14,11 @@ with source_data as (
         city,
         phone_number,
         source_system,
+        batch_id,
         ingestion_ts
     from {{ ref('stg_customers') }}
 ),
 
--- Deduplicate within batch - keep latest record per email
 source_data_deduped as (
     select
         email,
@@ -26,9 +27,10 @@ source_data_deduped as (
         city,
         phone_number,
         source_system,
+        batch_id,
         ingestion_ts,
         row_number() over (
-            partition by email 
+            partition by email, ingestion_ts  -- Group by email AND timestamp to avoid deduping across different times
             order by 
                 case 
                     when first_name is not null and last_name is not null then 1
@@ -47,12 +49,12 @@ source_clean as (
         city,
         phone_number,
         source_system,
+        batch_id,
         ingestion_ts
     from source_data_deduped
     where rn = 1
 ),
 
--- Find which emails changed (only on incremental runs)
 changed_emails as (
     select s.email
     from source_clean s
@@ -66,12 +68,36 @@ changed_emails as (
         or coalesce(s.phone_number, '') <> coalesce(t.phone_number, '')
         or coalesce(s.source_system, '') <> coalesce(t.source_system, '')
     {% else %}
-    where 1=0  -- On full refresh, no emails have "changed" - all are new
+    where 1=0
     {% endif %}
 ),
 
--- Rows to close (old versions of changed records)
-rows_to_close as (
+-- All historical records that should remain unchanged
+unchanged_history as (
+    {% if is_incremental() %}
+    select
+        email,
+        first_name,
+        last_name,
+        city,
+        phone_number,
+        source_system,
+        batch_id,
+        valid_from,
+        valid_to,
+        is_current
+    from {{ this }}
+    where email not in (select email from changed_emails)
+    {% else %}
+    select cast(null as varchar) as email, cast(null as varchar) as first_name, cast(null as varchar) as last_name, 
+           cast(null as varchar) as city, cast(null as varchar) as phone_number, cast(null as varchar) as source_system,
+           cast(null as varchar) as batch_id, cast(null as timestamp) as valid_from, cast(null as timestamp) as valid_to, cast(null as varchar) as is_current
+    where 1=0
+    {% endif %}
+),
+
+-- Old versions of changed records (close them)
+old_versions as (
     {% if is_incremental() %}
     select
         t.email,
@@ -80,28 +106,22 @@ rows_to_close as (
         t.city,
         t.phone_number,
         t.source_system,
+        t.batch_id,
         t.valid_from,
-        (select min(ingestion_ts) from source_clean where email = t.email) as valid_to,
+        (select min(s.ingestion_ts) from source_clean s where s.email = t.email and s.ingestion_ts > t.valid_from) as valid_to,
         'N' as is_current
     from {{ this }} t
     inner join changed_emails c on t.email = c.email
     where t.is_current = 'Y'
     {% else %}
-    select
-        cast(null as varchar) as email,
-        cast(null as varchar) as first_name,
-        cast(null as varchar) as last_name,
-        cast(null as varchar) as city,
-        cast(null as varchar) as phone_number,
-        cast(null as varchar) as source_system,
-        cast(null as timestamp) as valid_from,
-        cast(null as timestamp) as valid_to,
-        cast(null as varchar) as is_current
+    select cast(null as varchar) as email, cast(null as varchar) as first_name, cast(null as varchar) as last_name, 
+           cast(null as varchar) as city, cast(null as varchar) as phone_number, cast(null as varchar) as source_system,
+           cast(null as varchar) as batch_id, cast(null as timestamp) as valid_from, cast(null as timestamp) as valid_to, cast(null as varchar) as is_current
     where 1=0
     {% endif %}
 ),
 
--- New records to insert
+-- New records (from changed emails + brand new emails)
 new_records as (
     select
         s.email,
@@ -110,6 +130,7 @@ new_records as (
         s.city,
         s.phone_number,
         s.source_system,
+        s.batch_id,
         s.ingestion_ts as valid_from,
         cast(null as timestamp) as valid_to,
         'Y' as is_current
@@ -121,7 +142,8 @@ new_records as (
     {% endif %}
 )
 
--- Combine: old records being closed + new records
-select * from rows_to_close
+select * from unchanged_history
+union all
+select * from old_versions
 union all
 select * from new_records

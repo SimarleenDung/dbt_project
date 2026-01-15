@@ -1,2 +1,2 @@
-customer_id,email,first_name,last_name,city,phone_number,source_system
-9,bob@test.com,Bob,Green,Manchester,9876543210,facebook
+customer_id,email,first_name,last_name,city,phone_number,source_system,ingestion_ts
+9,bob@test.com,Bob,Green,Manchester,9876543210,facebook,2025-01-04 11:23:17

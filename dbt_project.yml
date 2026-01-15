@@ -45,6 +45,9 @@ models:
 seeds:
   Sim_Learning:
     +quote_columns: false
+    +column_types:
+      ingestion_ts: timestamp
 
 snapshots:
   +target_schema: snapshots
+

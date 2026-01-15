@@ -1,5 +1,4 @@
 customer_id,email,first_name,last_name,city,phone_number,source_system,timestamp
-<<<<<<< HEAD
 1,david.smith1@example.com,David,Smith,Dallas,5555108603,mobile,2025-01-02 10:16:56
 2,emma.brown2@example.com,Emma,Brown,Atlanta,5552458591,partner,2025-01-02 06:43:05
 3,bob.smith3@example.com,Bob,Smith,Chicago,5554668136,mobile,2025-01-02 22:40:40
@@ -12607,4 +12606,3 @@ customer_id,email,first_name,last_name,city,phone_number,source_system,timestamp
 1998,user1998@test.com,Ivy,Garcia,Bristol,,facebook,2025-01-02 09:13:40
 1999,user1999@test.com,Diana,Garcia,Bristol,0798765432,linkedin,2025-01-02 19:22:16
 2000,user2000@test.com,Charlie,Johnson,Manchester,0755555555,facebook,2025-01-02 20:52:56
->>>>>>> 03fb25af5152c4b25b2b73cfbef203df847606bc
