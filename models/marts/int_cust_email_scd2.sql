@@ -15,10 +15,6 @@ with source_data as (
         source_system,
         ingestion_ts
     from {{ ref('stg_customers') }}
-
-    {% if is_incremental() %}
-      where ingestion_ts > (select coalesce(max(ingestion_ts), '1900-01-01') from {{ this }})
-    {% endif %}
 ),
 
 -- Deduplicate within batch - keep latest record per email
@@ -32,18 +28,18 @@ source_data_deduped as (
         source_system,
         ingestion_ts,
         row_number() over (
-            partition by email, ingestion_ts 
+            partition by email 
             order by 
                 case 
                     when first_name is not null and last_name is not null then 1
                     else 2 
                 end,
-                customer_id desc  -- If customer_id exists in staging
+                customer_id desc
         ) as rn
     from source_data
 ),
 
-source_data_clean as (
+source_clean as (
     select
         email,
         first_name,
@@ -53,28 +49,29 @@ source_data_clean as (
         source_system,
         ingestion_ts
     from source_data_deduped
-    where rn = 1  -- Keep only the latest/most complete record
+    where rn = 1
 ),
 
--- Identify which emails have changes
-emails_with_changes as (
-    select distinct s.email
-    from source_data_clean s  -- Use deduped data
+-- Find which emails changed (only on incremental runs)
+changed_emails as (
+    select s.email
+    from source_clean s
     {% if is_incremental() %}
     inner join {{ this }} t
-        on s.email = t.email
-        and t.is_current = 'Y'
+        on s.email = t.email and t.is_current = 'Y'
     where
-           coalesce(s.first_name, '')    <> coalesce(t.first_name, '')
-        or coalesce(s.last_name, '')     <> coalesce(t.last_name, '')
-        or coalesce(s.city, '')          <> coalesce(t.city, '')
-        or coalesce(s.phone_number, '')  <> coalesce(t.phone_number, '')
+           coalesce(s.first_name, '') <> coalesce(t.first_name, '')
+        or coalesce(s.last_name, '') <> coalesce(t.last_name, '')
+        or coalesce(s.city, '') <> coalesce(t.city, '')
+        or coalesce(s.phone_number, '') <> coalesce(t.phone_number, '')
         or coalesce(s.source_system, '') <> coalesce(t.source_system, '')
+    {% else %}
+    where 1=0  -- On full refresh, no emails have "changed" - all are new
     {% endif %}
 ),
 
--- Close out old current records for changed emails
-close_old_records as (
+-- Rows to close (old versions of changed records)
+rows_to_close as (
     {% if is_incremental() %}
     select
         t.email,
@@ -84,16 +81,11 @@ close_old_records as (
         t.phone_number,
         t.source_system,
         t.valid_from,
-        min(s.ingestion_ts) as valid_to,
+        (select min(ingestion_ts) from source_clean where email = t.email) as valid_to,
         'N' as is_current
     from {{ this }} t
-    inner join emails_with_changes e
-        on t.email = e.email
-    inner join source_data_clean s  -- Use deduped data
-        on t.email = s.email
-        and s.ingestion_ts > t.valid_from
+    inner join changed_emails c on t.email = c.email
     where t.is_current = 'Y'
-    group by t.email, t.first_name, t.last_name, t.city, t.phone_number, t.source_system, t.valid_from
     {% else %}
     select
         cast(null as varchar) as email,
@@ -121,17 +113,15 @@ new_records as (
         s.ingestion_ts as valid_from,
         cast(null as timestamp) as valid_to,
         'Y' as is_current
-    from source_data_clean s  -- Use deduped data
+    from source_clean s
     {% if is_incremental() %}
     where 
-        -- New emails (never seen before)
         s.email not in (select email from {{ this }})
-        -- OR emails with actual changes
-        or s.email in (select email from emails_with_changes)
+        or s.email in (select email from changed_emails)
     {% endif %}
 )
 
 -- Combine: old records being closed + new records
-select * from close_old_records
+select * from rows_to_close
 union all
 select * from new_records
