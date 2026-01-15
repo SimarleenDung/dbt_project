@@ -1,6 +1,6 @@
 -- stg_customers.sql
 select
-    --customer_id,
+    customer_id,
     email,
     first_name,
     last_name,

@@ -1,12 +1,12 @@
 {{ config(
     materialized = 'incremental',
     unique_key = 'email',
-    incremental_strategy = 'delete+insert'
+    incremental_strategy = 'merge'
 ) }}
 
 with source_data as (
-
     select
+        customer_id,
         email,
         first_name,
         last_name,
@@ -17,100 +17,121 @@ with source_data as (
     from {{ ref('stg_customers') }}
 
     {% if is_incremental() %}
-      where ingestion_ts >
-            (select coalesce(max(valid_from), '1900-01-01') from {{ this }})
-    {% endif %}
-
-),
-
-combined as (
-
-    {% if is_incremental() %}
-
-        -- existing history FOR AFFECTED EMAILS ONLY
-        select
-            h.email,
-            h.first_name,
-            h.last_name,
-            h.city,
-            h.phone_number,
-            h.source_system,
-            h.valid_from
-        from {{ this }} h
-        inner join source_data s
-            on h.email = s.email
-
-        union all
-
-        -- new incoming data
-        select
-            email,
-            first_name,
-            last_name,
-            city,
-            phone_number,
-            source_system,
-            ingestion_ts as valid_from
-        from source_data where email not in (select distinct email from {{this}})
-
-    {% else %}
-
-        -- first run / full refresh
-        select
-            email,
-            first_name,
-            last_name,
-            city,
-            phone_number,
-            source_system,
-            ingestion_ts as valid_from
-        from source_data
-
+      where ingestion_ts > (select coalesce(max(ingestion_ts), '1900-01-01') from {{ this }})
     {% endif %}
 ),
 
-ordered as (
-
+-- Deduplicate within batch - keep latest record per email
+source_data_deduped as (
     select
-        *,
-        lag(first_name)    over (partition by email order by valid_from) as prev_first_name,
-        lag(last_name)     over (partition by email order by valid_from) as prev_last_name,
-        lag(city)          over (partition by email order by valid_from) as prev_city,
-        lag(phone_number)  over (partition by email order by valid_from) as prev_phone_number,
-        lag(source_system) over (partition by email order by valid_from) as prev_source_system
-    from combined
+        email,
+        first_name,
+        last_name,
+        city,
+        phone_number,
+        source_system,
+        ingestion_ts,
+        row_number() over (
+            partition by email, ingestion_ts 
+            order by 
+                case 
+                    when first_name is not null and last_name is not null then 1
+                    else 2 
+                end,
+                customer_id desc  -- If customer_id exists in staging
+        ) as rn
+    from source_data
 ),
 
-changes_only as (
+source_data_clean as (
+    select
+        email,
+        first_name,
+        last_name,
+        city,
+        phone_number,
+        source_system,
+        ingestion_ts
+    from source_data_deduped
+    where rn = 1  -- Keep only the latest/most complete record
+),
 
-    select *
-    from ordered
+-- Identify which emails have changes
+emails_with_changes as (
+    select distinct s.email
+    from source_data_clean s  -- Use deduped data
+    {% if is_incremental() %}
+    inner join {{ this }} t
+        on s.email = t.email
+        and t.is_current = 'Y'
     where
-          prev_first_name is null
-       or coalesce(first_name, '')    <> coalesce(prev_first_name, '')
-       or coalesce(last_name, '')     <> coalesce(prev_last_name, '')
-       or coalesce(city, '')          <> coalesce(prev_city, '')
-       or coalesce(phone_number, '')  <> coalesce(prev_phone_number, '')
-       or coalesce(source_system, '') <> coalesce(prev_source_system, '')
+           coalesce(s.first_name, '')    <> coalesce(t.first_name, '')
+        or coalesce(s.last_name, '')     <> coalesce(t.last_name, '')
+        or coalesce(s.city, '')          <> coalesce(t.city, '')
+        or coalesce(s.phone_number, '')  <> coalesce(t.phone_number, '')
+        or coalesce(s.source_system, '') <> coalesce(t.source_system, '')
+    {% endif %}
+),
+
+-- Close out old current records for changed emails
+close_old_records as (
+    {% if is_incremental() %}
+    select
+        t.email,
+        t.first_name,
+        t.last_name,
+        t.city,
+        t.phone_number,
+        t.source_system,
+        t.valid_from,
+        min(s.ingestion_ts) as valid_to,
+        'N' as is_current
+    from {{ this }} t
+    inner join emails_with_changes e
+        on t.email = e.email
+    inner join source_data_clean s  -- Use deduped data
+        on t.email = s.email
+        and s.ingestion_ts > t.valid_from
+    where t.is_current = 'Y'
+    group by t.email, t.first_name, t.last_name, t.city, t.phone_number, t.source_system, t.valid_from
+    {% else %}
+    select
+        cast(null as varchar) as email,
+        cast(null as varchar) as first_name,
+        cast(null as varchar) as last_name,
+        cast(null as varchar) as city,
+        cast(null as varchar) as phone_number,
+        cast(null as varchar) as source_system,
+        cast(null as timestamp) as valid_from,
+        cast(null as timestamp) as valid_to,
+        cast(null as varchar) as is_current
+    where 1=0
+    {% endif %}
+),
+
+-- New records to insert
+new_records as (
+    select
+        s.email,
+        s.first_name,
+        s.last_name,
+        s.city,
+        s.phone_number,
+        s.source_system,
+        s.ingestion_ts as valid_from,
+        cast(null as timestamp) as valid_to,
+        'Y' as is_current
+    from source_data_clean s  -- Use deduped data
+    {% if is_incremental() %}
+    where 
+        -- New emails (never seen before)
+        s.email not in (select email from {{ this }})
+        -- OR emails with actual changes
+        or s.email in (select email from emails_with_changes)
+    {% endif %}
 )
 
-select
-    email,
-    first_name,
-    last_name,
-    city,
-    phone_number,
-    source_system,
-
-    valid_from,
-
-    lead(valid_from)
-        over (partition by email order by valid_from) as valid_to,
-
-    case
-        when lead(valid_from)
-             over (partition by email order by valid_from) is null
-        then 'Y' else 'N'
-    end as is_current
-
-from changes_only
+-- Combine: old records being closed + new records
+select * from close_old_records
+union all
+select * from new_records
