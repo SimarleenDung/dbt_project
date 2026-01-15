@@ -1,6 +1,6 @@
 {{ config(
     materialized = 'incremental',
-    unique_key = ['email', 'valid_from'],
+    unique_key = 'email',
     incremental_strategy = 'merge'
 ) }}
 
@@ -17,7 +17,7 @@ with source_data as (
     from {{ ref('stg_customers') }}
 
     {% if is_incremental() %}
-      where ingestion_ts > (select coalesce(max(valid_from), '1900-01-01') from {{ this }})
+      where ingestion_ts > (select coalesce(max(ingestion_ts), '1900-01-01') from {{ this }})
     {% endif %}
 ),
 
