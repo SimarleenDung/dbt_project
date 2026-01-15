@@ -39,11 +39,11 @@ select
     city,
     phone_number,
     source_system,
-    'test1' as batch_id,
+    'customers_seed_new' as batch_id,
     --'day1' as batch_id,
     --'2025-01-01'::timestamp as ingestion_ts
     timestamp::timestamp as ingestion_ts
-from {{ ref('customers_seed') }}
+from {{ ref('customers_seed_new') }}
 
 /*select 
     customer_id,
