@@ -69,7 +69,7 @@ select
     city,
     cast(null as varchar) as phone_number,
     source_system,
-    'day1' as batch_id,
+    --'day1' as batch_id,
     --'2025-01-01'::timestamp as ingestion_ts
     cast(ingestion_ts as timestamp) as ingestion_ts
 from {{ ref('customers_day1') }}
@@ -84,7 +84,7 @@ select
     city,
     cast(null as varchar) as phone_number,
     source_system,
-    'day2' as batch_id,
+    --'day2' as batch_id,
     --'2025-01-02'::timestamp as ingestion_ts
     cast(ingestion_ts as timestamp) as ingestion_ts
 from {{ ref('customers_day2') }}
@@ -99,7 +99,7 @@ select
     city,
     cast(null as varchar) as phone_number,
     source_system,
-    'day3' as batch_id,
+    --'day3' as batch_id,
     --'2025-01-03'::timestamp as ingestion_ts
     cast(ingestion_ts as timestamp) as ingestion_ts
 from {{ ref('customers_day3') }}
@@ -114,7 +114,7 @@ select
     city,
     phone_number,
     source_system,
-    'day4' as batch_id,
+    --'day4' as batch_id,
     --'2025-01-04'::timestamp as ingestion_ts
     cast(ingestion_ts as timestamp) as ingestion_ts
 from {{ ref('customers_day4') }}
@@ -129,7 +129,7 @@ select
     cast(null as varchar) as city,
     cast(null as varchar) as phone_number,
     source_system,
-    'day5' as batch_id,
+    --'day5' as batch_id,
     --'2025-01-05'::timestamp as ingestion_ts
     cast(ingestion_ts as timestamp) as ingestion_ts
 from {{ ref('customers_day5') }}
@@ -144,7 +144,7 @@ select
     city,
     phone_number,
     source_system,
-    'day6' as batch_id,
+    --'day6' as batch_id,
     --'2025-01-06'::timestamp as ingestion_ts
     cast(ingestion_ts as timestamp) as ingestion_ts
 from {{ ref('customers_day6') }}
@@ -159,7 +159,7 @@ select
     city,
     phone_number,
     source_system,
-    'day7' as batch_id,
+    --'day7' as batch_id,
     --'2025-01-07'::timestamp as ingestion_ts
     cast(ingestion_ts as timestamp) as ingestion_ts
 from {{ ref('customers_day7') }}
@@ -174,7 +174,7 @@ select
     city,
     phone_number,
     source_system,
-    'day8' as batch_id,
+    --'day8' as batch_id,
     --'2025-01-08'::timestamp as ingestion_ts
     cast(ingestion_ts as timestamp) as ingestion_ts
 from {{ ref('customers_day8') }}
@@ -189,7 +189,7 @@ select
     city,
     phone_number,
     source_system,
-    'day9' as batch_id,
+    --'day9' as batch_id,
     --'2025-01-09'::timestamp as ingestion_ts
     cast(ingestion_ts as timestamp) as ingestion_ts
 from {{ ref('customers_day9') }}
@@ -204,7 +204,7 @@ select
     city,
     phone_number,
     source_system,
-    'day10' as batch_id,
+    --'day10' as batch_id,
     --'2025-01-10'::timestamp as ingestion_ts
     cast(ingestion_ts as timestamp) as ingestion_ts
 from {{ ref('customers_day10') }}
