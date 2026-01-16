@@ -1,10 +1,11 @@
 {{ config(
     materialized = 'incremental',
-    unique_key = ['email', 'valid_from'],
-    incremental_strategy = 'merge'
+    incremental_strategy = 'merge',
+    unique_key = ['email', 'valid_from']
 ) }}
 
 with source_data as (
+
     select
         customer_id,
         email,
@@ -13,13 +14,14 @@ with source_data as (
         city,
         phone_number,
         source_system,
-        batch_id,
         ingestion_ts
     from {{ ref('stg_customers') }}
+
 ),
 
--- dedupe within same timestamp
+-- 1️⃣ Deduplicate rows arriving at the same timestamp
 source_clean as (
+
     select
         email,
         first_name,
@@ -27,17 +29,19 @@ source_clean as (
         city,
         phone_number,
         source_system,
-        batch_id,
         ingestion_ts,
         row_number() over (
             partition by email, ingestion_ts
             order by customer_id desc
         ) as rn
     from source_data
+
 ),
 
--- keep only 1 row per email PER RUN (very important)
-latest_source as (
+-- 2️⃣ Keep only the FIRST occurrence of each attribute combination
+--     This is the key step that prevents Bob Green from flipping
+dedup_attributes as (
+
     select
         email,
         first_name,
@@ -45,26 +49,43 @@ latest_source as (
         city,
         phone_number,
         source_system,
-        batch_id,
-        ingestion_ts
-    from (
-        select
-            *,
-            row_number() over (
-                partition by email
-                order by ingestion_ts desc
-            ) as rn2
-        from source_clean
-        where rn = 1
-    ) as ranked_source
-    where rn2 = 1
+        ingestion_ts,
+        row_number() over (
+            partition by
+                email,
+                first_name,
+                last_name,
+                city,
+                phone_number,
+                source_system
+            order by ingestion_ts
+        ) as attr_rn
+    from source_clean
+    where rn = 1
+
 ),
 
--- detect changed emails
+all_source_records as (
+
+    select
+        email,
+        first_name,
+        last_name,
+        city,
+        phone_number,
+        source_system,
+        ingestion_ts
+    from dedup_attributes
+    where attr_rn = 1
+
+),
+
+-- 3️⃣ Emails whose ATTRIBUTES actually changed
 changed_emails as (
+
     {% if is_incremental() %}
-    select s.email
-    from latest_source s
+    select distinct s.email
+    from all_source_records s
     join {{ this }} t
       on s.email = t.email
      and t.is_current = 'Y'
@@ -76,91 +97,39 @@ changed_emails as (
        or coalesce(s.source_system, '') <> coalesce(t.source_system, '')
     {% else %}
     select cast(null as varchar) as email
-    from (select 1 as dummy) dummy_table
-    where 1=0
+    from (select 1) x
+    where 1 = 0
     {% endif %}
+
 ),
 
--- keep rows that are completely untouched
-unchanged_history as (
+-- 4️⃣ New emails
+new_emails as (
+
     {% if is_incremental() %}
-    select *
-    from {{ this }}
-    where email not in (select email from changed_emails)
+    select distinct s.email
+    from all_source_records s
+    left join {{ this }} t
+      on s.email = t.email
+    where t.email is null
     {% else %}
-    select
-        cast(null as varchar)   as email,
-        cast(null as varchar)   as first_name,
-        cast(null as varchar)   as last_name,
-        cast(null as varchar)   as city,
-        cast(null as varchar)   as phone_number,
-        cast(null as varchar)   as source_system,
-        cast(null as varchar)   as batch_id,
-        cast(null as timestamp) as valid_from,
-        cast(null as timestamp) as valid_to,
-        cast(null as varchar)   as is_current
-    from (select 1 as dummy) dummy_table
-    where 1=0
+    select distinct email from all_source_records
     {% endif %}
+
 ),
 
--- close current rows for changed emails
-old_versions as (
+emails_to_process as (
+
+    select email from changed_emails
+    union
+    select email from new_emails
+
+),
+
+-- 5️⃣ Build timeline for CHANGED emails
+changed_email_timeline as (
+
     {% if is_incremental() %}
-    select
-        t.email,
-        t.first_name,
-        t.last_name,
-        t.city,
-        t.phone_number,
-        t.source_system,
-        t.batch_id,
-        t.valid_from,
-        s.ingestion_ts as valid_to,
-        'N' as is_current
-    from {{ this }} t
-    join changed_emails c on t.email = c.email
-    join latest_source s on s.email = t.email
-    where t.is_current = 'Y'
-    {% else %}
-    select
-        cast(null as varchar)   as email,
-        cast(null as varchar)   as first_name,
-        cast(null as varchar)   as last_name,
-        cast(null as varchar)   as city,
-        cast(null as varchar)   as phone_number,
-        cast(null as varchar)   as source_system,
-        cast(null as varchar)   as batch_id,
-        cast(null as timestamp) as valid_from,
-        cast(null as timestamp) as valid_to,
-        cast(null as varchar)   as is_current
-    from (select 1 as dummy) dummy_table
-    where 1=0
-    {% endif %}
-),
-
--- new current rows (new emails OR changed emails)
-new_records as (
-    select
-        s.email,
-        s.first_name,
-        s.last_name,
-        s.city,
-        s.phone_number,
-        s.source_system,
-        s.batch_id,
-        s.ingestion_ts as valid_from,
-        cast(null as timestamp) as valid_to,
-        'Y' as is_current
-    from latest_source s
-    {% if is_incremental() %}
-    where s.email not in (select email from {{ this }})
-       or s.email in (select email from changed_emails)
-    {% endif %}
-),
-
--- final safety net: guarantee ONE current row per email
-final as (
     select
         email,
         first_name,
@@ -168,23 +137,168 @@ final as (
         city,
         phone_number,
         source_system,
-        batch_id,
+        valid_from
+    from {{ this }}
+    where email in (select email from changed_emails)
+
+    union all
+
+    select
+        email,
+        first_name,
+        last_name,
+        city,
+        phone_number,
+        source_system,
+        ingestion_ts as valid_from
+    from all_source_records
+    where email in (select email from changed_emails)
+    {% else %}
+    select
+        cast(null as varchar) as email,
+        cast(null as varchar) as first_name,
+        cast(null as varchar) as last_name,
+        cast(null as varchar) as city,
+        cast(null as varchar) as phone_number,
+        cast(null as varchar) as source_system,
+        cast(null as timestamp) as valid_from
+    from (select 1) x
+    where 1 = 0
+    {% endif %}
+
+),
+
+changed_scd2 as (
+
+    select
+        email,
+        first_name,
+        last_name,
+        city,
+        phone_number,
+        source_system,
         valid_from,
-        valid_to,
+        lead(valid_from) over (
+            partition by email
+            order by valid_from
+        ) as valid_to,
         case
-            when row_number() over (
+            when lead(valid_from) over (
                 partition by email
-                order by valid_from desc
-            ) = 1 then 'Y'
+                order by valid_from
+            ) is null then 'Y'
             else 'N'
         end as is_current
-    from (
-        select * from unchanged_history
-        union all
-        select * from old_versions
-        union all
-        select * from new_records
-    ) as combined_records
+    from changed_email_timeline
+
+),
+
+-- 6️⃣ New emails SCD2
+new_scd2 as (
+
+    select
+        email,
+        first_name,
+        last_name,
+        city,
+        phone_number,
+        source_system,
+        ingestion_ts as valid_from,
+        lead(ingestion_ts) over (
+            partition by email
+            order by ingestion_ts
+        ) as valid_to,
+        case
+            when lead(ingestion_ts) over (
+                partition by email
+                order by ingestion_ts
+            ) is null then 'Y'
+            else 'N'
+        end as is_current
+    from all_source_records
+    where email in (select email from new_emails)
+
+),
+
+-- 7️⃣ Final union (NO select *)
+final as (
+
+    select
+        email,
+        first_name,
+        last_name,
+        city,
+        phone_number,
+        source_system,
+        valid_from,
+        valid_to,
+        is_current
+    from changed_scd2
+
+    union all
+
+    select
+        email,
+        first_name,
+        last_name,
+        city,
+        phone_number,
+        source_system,
+        valid_from,
+        valid_to,
+        is_current
+    from new_scd2
+
+    {% if is_incremental() %}
+    union all
+
+    select
+        email,
+        first_name,
+        last_name,
+        city,
+        phone_number,
+        source_system,
+        valid_from,
+        valid_to,
+        is_current
+    from {{ this }}
+    where email not in (select email from emails_to_process)
+    {% endif %}
+
+),
+
+final_dedup as (
+
+    select
+        email,
+        first_name,
+        last_name,
+        city,
+        phone_number,
+        source_system,
+        valid_from,
+        valid_to,
+        is_current,
+        row_number() over (
+            partition by email, valid_from
+            order by
+                case when is_current = 'Y' then 1 else 2 end,
+                valid_to desc
+        ) as rn
+    from final
+
 )
 
-select * from final
+select
+    email,
+    first_name,
+    last_name,
+    city,
+    phone_number,
+    source_system,
+    valid_from,
+    valid_to,
+    is_current
+from final_dedup
+where rn = 1
