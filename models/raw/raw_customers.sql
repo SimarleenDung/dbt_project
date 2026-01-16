@@ -89,7 +89,7 @@ select
     cast(ingestion_ts as timestamp) as ingestion_ts
 from {{ ref('customers_day2') }}
 
-/*union all
+union all
 
 select
     customer_id,
@@ -207,4 +207,4 @@ select
     'day10' as batch_id,
     --'2025-01-10'::timestamp as ingestion_ts
     cast(ingestion_ts as timestamp) as ingestion_ts
-from {{ ref('customers_day10') }}*/
+from {{ ref('customers_day10') }}
