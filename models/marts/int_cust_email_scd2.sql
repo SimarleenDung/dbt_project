@@ -56,7 +56,7 @@ latest_source as (
             ) as rn2
         from source_clean
         where rn = 1
-    )
+    ) as ranked_source
     where rn2 = 1
 ),
 
@@ -75,7 +75,9 @@ changed_emails as (
        or coalesce(s.phone_number, '') <> coalesce(t.phone_number, '')
        or coalesce(s.source_system, '') <> coalesce(t.source_system, '')
     {% else %}
-    select cast(null as varchar) as email where 1=0
+    select cast(null as varchar) as email
+    from (select 1 as dummy) dummy_table
+    where 1=0
     {% endif %}
 ),
 
@@ -97,6 +99,7 @@ unchanged_history as (
         cast(null as timestamp) as valid_from,
         cast(null as timestamp) as valid_to,
         cast(null as varchar)   as is_current
+    from (select 1 as dummy) dummy_table
     where 1=0
     {% endif %}
 ),
@@ -131,13 +134,13 @@ old_versions as (
         cast(null as timestamp) as valid_from,
         cast(null as timestamp) as valid_to,
         cast(null as varchar)   as is_current
+    from (select 1 as dummy) dummy_table
     where 1=0
     {% endif %}
 ),
 
 -- new current rows (new emails OR changed emails)
 new_records as (
-    {% if is_incremental() %}
     select
         s.email,
         s.first_name,
@@ -150,21 +153,9 @@ new_records as (
         cast(null as timestamp) as valid_to,
         'Y' as is_current
     from latest_source s
+    {% if is_incremental() %}
     where s.email not in (select email from {{ this }})
        or s.email in (select email from changed_emails)
-    {% else %}
-    select
-        s.email,
-        s.first_name,
-        s.last_name,
-        s.city,
-        s.phone_number,
-        s.source_system,
-        s.batch_id,
-        s.ingestion_ts as valid_from,
-        cast(null as timestamp) as valid_to,
-        'Y' as is_current
-    from latest_source s
     {% endif %}
 ),
 
@@ -193,7 +184,7 @@ final as (
         select * from old_versions
         union all
         select * from new_records
-    )
+    ) as combined_records
 )
 
-select * from final;
+select * from final
