@@ -7,7 +7,6 @@ select
     city,
     cast(phone_number as varchar) as phone_number,
     source_system,
-    --batch_id,
     ingestion_ts
 
 from {{ ref('raw_customers') }}
