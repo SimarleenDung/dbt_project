@@ -1,4 +1,4 @@
-/*select 
+select 
     customer_id,
     email,
     first_name,
@@ -7,7 +7,7 @@
     cast(null as varchar) as phone_number,
     source_system,
     cast(ingestion_ts as timestamp) as ingestion_ts
-from {{ ref('customers_scd_test') }}*/
+from {{ ref('customers_scd_test') }}
 
 /*select 
     customer_id,
